@@ -11,6 +11,7 @@ namespace TkScripts.LookupTables.Generators;
 
 public sealed class GameDataIndexGenerator : IGenerator
 {
+    private const ulong _64_BIT_TABLE_HASH = 0x395431E5422F920F;
     private readonly Dictionary<int, GameDataHashTable> _versions = [];
     
     public IEnumerable<object> Tags { get; } = ["Index"];
@@ -73,6 +74,7 @@ public sealed class GameDataIndexGenerator : IGenerator
             
             // Table
             output.Write("_TBL"u8);
+            output.Write(_64_BIT_TABLE_HASH);
             output.Write(hashTable.Bool64Table.Count);
             
             foreach ((ulong hash, int index) in hashTable.Bool64Table) {
