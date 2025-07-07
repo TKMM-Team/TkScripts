@@ -78,7 +78,7 @@ public sealed class RsdbCacheGenerator : IGenerator
 
     private void WriteCacheBinary(Stream output)
     {
-        output.Write(_cache.Count);
+        output.Write(_cache.Count(x => x.Value.Count > 0));
         
         foreach ((ulong rsdbNameHash, RsdbCache cache) in _cache) {
             if (cache.Count == 0) {
