@@ -20,13 +20,14 @@ internal static class App
             return;
         }
 
-        var tasks = new Task[3];
+        var tasks = new Task[4];
 
         OutputStore store = new(output);
 
         tasks[0] = store.WriteResults(new RsdbCacheGenerator(), gamePaths);
         tasks[1] = store.WriteResults(new GameDataIndexGenerator(), gamePaths);
         tasks[2] = store.WriteResults(new ChecksumGenerator(), gamePaths);
+        tasks[3] = store.WriteResults(new PackFileLookupGenerator(), gamePaths, compress: true);
         
         await Task.WhenAll(tasks);
     }
