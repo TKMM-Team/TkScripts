@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO.Hashing;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -8,15 +9,16 @@ using Revrs;
 using SarcLibrary;
 using TotkCommon;
 using TotkCommon.Extensions;
-using ResultCollectionEntry = System.Collections.Generic.OrderedDictionary<string, System.Collections.Generic.List<int>>;
-using ResultCollection = System.Collections.Generic.Dictionary<string, System.Collections.Generic.OrderedDictionary<string, System.Collections.Generic.List<int>>>;
+using ResultCollectionEntry = System.Collections.Generic.OrderedDictionary<TkScripts.LookupTables.Generators.PackFileName, System.Collections.Generic.List<int>>;
+using ResultCollection = System.Collections.Generic.Dictionary<string, System.Collections.Generic.OrderedDictionary<TkScripts.LookupTables.Generators.PackFileName, System.Collections.Generic.List<int>>>;
 
 namespace TkScripts.LookupTables.Generators;
 
 public class PackFileLookupGenerator : IGenerator
 {
     private const uint Magic = 0x48434B50;
-    private readonly Dictionary<string, string> _results = [];
+    private readonly Dictionary<string, PackFileName> _results = [];
+    private readonly Dictionary<int, Sarc> _cache = [];
 
     public IEnumerable<object> Tags { get; } = ["Lookup"];
 
@@ -40,32 +42,40 @@ public class PackFileLookupGenerator : IGenerator
             Console.WriteLine($"[{DateTime.Now:t}] Completed {folder}");
         }
 
-        Dictionary<string, ResultCollectionEntry> missing = [];
+        ResultCollection missing = [];
 
         foreach ((string canon, ResultCollectionEntry parents) in allVersions) {
-            string? foundParent = null;
+            PackFileName? foundParent = null;
 
-            foreach ((string parent, List<int> versions) in parents) {
+            if (canon == "Game/StaffRoll/StaffRollSetTable/StaffRoll-NX.game__ui__StaffRollSetTable.bgyml") {
+                Debugger.Break();
+            }
+
+            foreach ((PackFileName parent, List<int> versions) in parents) {
                 if (versions.Count == versionCount) {
                     foundParent = parent;
                     break;
                 }
             }
 
-            if (foundParent is null && IsEachVersionListEqual(parents) is false) {
+            if (foundParent is null && (parents.Count == 1 || !IsEachVersionListEqual(parents))) {
                 Console.WriteLine(Chalk.BrightYellow +
                                   $"Versioning required: '{canon}' has no parent pack files found in every game version.");
+                // This may be needed for caching, however, the
+                // lookup is dependent on mod devs using the correct files
                 missing[canon] = parents;
-                continue;
             }
 
             _results[canon] = foundParent ?? parents.First().Key;
         }
 
-        return Task.FromResult<object?>(missing);
+        return Task.FromResult<object?>(
+            missing.Select(x => (x.Key, Value: x.Value.ToList()))
+                .ToDictionary(x => x.Key, x => x.Value)
+        );
     }
 
-    private static void CollectFolder(string romfs, string packFolder, int version, ResultCollection results)
+    private void CollectFolder(string romfs, string packFolder, int version, ResultCollection results)
     {
         foreach (string file in Directory.EnumerateFiles(packFolder, "*.*", SearchOption.AllDirectories)) {
             byte[] raw = File.ReadAllBytes(file);
@@ -74,9 +84,11 @@ public class PackFileLookupGenerator : IGenerator
             RevrsReader reader = new(decompressed);
             ImmutableSarc sarc = new(ref reader);
 
-            string packFileRelative = Path.GetRelativePath(romfs, file);
+            PackFileName packFileRelative = new(
+                file.ToCanonical(romfs, out RomfsFileAttributes attributes).ToString(),
+                attributes);
 
-            foreach ((string name, _) in sarc) {
+            foreach ((string name, Span<byte> data) in sarc) {
                 if (!results.TryGetValue(name, out ResultCollectionEntry? parents)) {
                     results[name] = new ResultCollectionEntry {
                         { packFileRelative, [version] }
@@ -108,13 +120,13 @@ public class PackFileLookupGenerator : IGenerator
         output.Write(0U);
 
         string[] keys = _results.Keys.ToArray();
-        string[] values = _results.Values.ToArray();
+        PackFileName[] values = _results.Values.ToArray();
         Array.Sort(keys, values);
 
         Dictionary<ushort, HashSet<uint>> hashCollisions = [];
 
         int skippedValues = 0;
-        Dictionary<string, int> parentNameLookup = [];
+        Dictionary<PackFileName, int> parentNameLookup = [];
 
         for (int i = 0; i < keys.Length; i++) {
             ReadOnlySpan<char> key = keys[i];
@@ -140,17 +152,18 @@ public class PackFileLookupGenerator : IGenerator
             output.Write((ushort)index);
         }
 
-        foreach ((string archiveRelativePath, _) in parentNameLookup) {
-            ReadOnlySpan<char> canonical = archiveRelativePath.ToCanonical(out RomfsFileAttributes attributes);
-            int count = Encoding.UTF8.GetByteCount(canonical);
+        foreach ((PackFileName archiveRelativePath, _) in parentNameLookup) {
+            int count = Encoding.UTF8.GetByteCount(archiveRelativePath.Canonical);
             using SpanOwner<byte> utf8 = SpanOwner<byte>.Allocate(count);
-            Encoding.UTF8.GetBytes(canonical, utf8.Span);
+            Encoding.UTF8.GetBytes(archiveRelativePath.Canonical, utf8.Span);
             output.Write(utf8.Span);
             output.Write((byte)0);
-            output.Write((byte)attributes);
+            output.Write((byte)archiveRelativePath.Attributes);
         }
 
         output.Seek(0xC, SeekOrigin.Begin);
         output.Write(parentNameLookup.Count);
     }
 }
+
+public record struct PackFileName(string Canonical, RomfsFileAttributes Attributes);
