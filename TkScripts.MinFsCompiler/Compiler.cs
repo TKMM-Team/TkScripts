@@ -27,7 +27,7 @@ public class Compiler : IDisposable, IAsyncDisposable
 
     public void Compile(StatusContext ctx)
     {
-        AnsiConsole.MarkupLine("[deepskyblue1]Collecting targets[/] :ant:");
+        AnsiConsole.MarkupLine("[deepskyblue1]Collecting targets...[/]");
         
         foreach (string filePath in Directory.GetFiles(_romfs, "*.*", SearchOption.AllDirectories)) {
             var relativeFilePath = Path.GetRelativePath(_romfs, filePath).AsSpan();
@@ -45,24 +45,24 @@ public class Compiler : IDisposable, IAsyncDisposable
             }
         }
         
-        AnsiConsole.MarkupLine("[springgreen1]Targets collected[/] :check_mark:");
-        AnsiConsole.MarkupLine("[deepskyblue1]Sorting results[/] :file_cabinet:");
+        AnsiConsole.MarkupLine("[springgreen1]Targets collected[/]");
+        AnsiConsole.MarkupLine("[deepskyblue1]Sorting results...[/]");
         
         (ulong Id, string)[] targets = [.. _targets.OrderBy(x => x.Id)];
         
-        AnsiConsole.MarkupLine("[springgreen1]Sorting complete[/] :check_mark:");
-        AnsiConsole.MarkupLine("[deepskyblue1]Calculating block count[/]");
+        AnsiConsole.MarkupLine("[springgreen1]Sorting complete[/]");
+        AnsiConsole.MarkupLine("[deepskyblue1]Calculating block count...[/]");
 
         int blockCount = targets.Length / BlockSize;
 
-        for (int i = 0; i < blockCount;) {
-            ctx.Status = $"[slateblue1]Compiling block {i++}/{blockCount}...[/]";
+        for (int i = 0; i < blockCount; i++) {
+            ctx.Status = $"[slateblue1]Compiling block {i+1}/{blockCount}...[/]";
             int baseIndex = i * BlockSize;
             Collect(targets.AsSpan()[baseIndex..(baseIndex + BlockSize)]);
         }
 
         Collect(targets.AsSpan()[(blockCount * BlockSize)..]);
-        AnsiConsole.MarkupLine("[springgreen1]Compilation complete[/] :check_mark:");
+        AnsiConsole.MarkupLine("[springgreen1]Compilation complete[/]");
     }
     
     private void Collect(Span<(ulong Id, string File)> values)

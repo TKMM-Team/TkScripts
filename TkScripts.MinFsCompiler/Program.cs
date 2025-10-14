@@ -11,7 +11,7 @@ string version = typeof(Program).Assembly
 Console.WriteLine($"""
     TotK Minimized FileSystem Compiler [Version {version}]
     (c) TKMM-Team. MIT.
-    
+
     """);
 
 if (TkConfig.GetGamePaths() is not { Length: > 2 } gamePaths) {
@@ -23,17 +23,19 @@ if (args is not [string outputFolder]) {
     outputFolder = "bin";
 }
 
-foreach (var romfsFolderPath in gamePaths) {
-    int versionNumber = romfsFolderPath.GetRomfsVersion();
-    string output = Path.Combine(outputFolder, versionNumber.ToString());
-    
-    AnsiConsole.Status()
-        .Spinner(Spinner.Known.Dots2)
-        .SpinnerStyle(Style.Parse("slateblue1 bold"))
-        .Start($"Compiling {versionNumber} to '{output}'", ctx => {
+AnsiConsole.Status()
+    .Spinner(Spinner.Known.Dots2)
+    .SpinnerStyle(Style.Parse("slateblue1 bold"))
+    .Start("Compiling...", ctx => {
+        foreach (var romfsFolderPath in gamePaths) {
+            int versionNumber = romfsFolderPath.GetRomfsVersion();
+            string output = Path.Combine(outputFolder, versionNumber.ToString());
+
+            ctx.Status = $"Compiling {versionNumber} to '{output}'";
+
             using Compiler compiler = new(romfsFolderPath, output);
             compiler.Compile(ctx);
-        });
-    
-    AnsiConsole.MarkupLine($"[springgreen1]Compilation of {versionNumber} completed.[/] :check_mark:");
-}
+
+            AnsiConsole.MarkupLine($"[springgreen1]Compilation of {versionNumber} completed.[/]");
+        }
+    });
