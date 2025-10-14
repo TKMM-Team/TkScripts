@@ -9,7 +9,7 @@ namespace TkScripts.MinFsCompiler;
 public class Compiler : IDisposable, IAsyncDisposable
 {
     private const int BlockSize = 1000;
-    
+
     private readonly List<(ulong Id, string FilePath)> _targets = [];
     private readonly string _romfs;
     private readonly string _outputFolder;
@@ -19,7 +19,7 @@ public class Compiler : IDisposable, IAsyncDisposable
     {
         _romfs = romfs;
         _outputFolder = outputFolder;
-        
+
         Directory.CreateDirectory(outputFolder);
         string metadata = Path.Combine(_outputFolder, "__meta__");
         _metadataFs = File.Create(metadata);
@@ -28,14 +28,14 @@ public class Compiler : IDisposable, IAsyncDisposable
     public void Compile(StatusContext ctx)
     {
         AnsiConsole.MarkupLine("[deepskyblue1]Collecting targets...[/]");
-        
+
         foreach (string filePath in Directory.GetFiles(_romfs, "*.*", SearchOption.AllDirectories)) {
             var relativeFilePath = Path.GetRelativePath(_romfs, filePath).AsSpan();
             relativeFilePath.ReplaceInline('\\', '/');
-    
+
             var name = filePath.ToCanonical(relativeFilePath);
             var ext = Path.GetExtension(name);
-    
+
             // Include all top-level diffable file extensions0.
             if (ext is ".genvb" or ".bfarc" or ".sarc" or ".pack" or ".bkres" or ".ta" or ".blarc" or ".byml" or ".bgyml"
                     or ".bntx" or ".bars" || name is "System/RegionLangMask.txt") {
@@ -44,19 +44,19 @@ public class Compiler : IDisposable, IAsyncDisposable
                 );
             }
         }
-        
+
         AnsiConsole.MarkupLine("[springgreen1]Targets collected[/]");
         AnsiConsole.MarkupLine("[deepskyblue1]Sorting results...[/]");
-        
+
         (ulong Id, string)[] targets = [.. _targets.OrderBy(x => x.Id)];
-        
+
         AnsiConsole.MarkupLine("[springgreen1]Sorting complete[/]");
         AnsiConsole.MarkupLine("[deepskyblue1]Calculating block count...[/]");
 
         int blockCount = targets.Length / BlockSize;
 
         for (int i = 0; i < blockCount; i++) {
-            ctx.Status = $"[slateblue1]Compiling block {i+1}/{blockCount}...[/]";
+            ctx.Status = $"[slateblue1]Compiling block {i + 1}/{blockCount}...[/]";
             int baseIndex = i * BlockSize;
             Collect(targets.AsSpan()[baseIndex..(baseIndex + BlockSize)]);
         }
@@ -64,7 +64,7 @@ public class Compiler : IDisposable, IAsyncDisposable
         Collect(targets.AsSpan()[(blockCount * BlockSize)..]);
         AnsiConsole.MarkupLine("[springgreen1]Compilation complete[/]");
     }
-    
+
     private void Collect(Span<(ulong Id, string File)> values)
     {
         ulong lastId = values[^1].Id;
