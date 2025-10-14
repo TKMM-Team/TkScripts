@@ -1,12 +1,7 @@
-﻿// See https://aka.ms/new-console-template for more information
-    
-// ReSharper disable StringLiteralTypo
-
-using System.IO.Hashing;
-using System.Reflection;
-using CommunityToolkit.HighPerformance;
-using Revrs.Extensions;
-using TkScripts.MinFsCompiler.Extensions;
+﻿using System.Reflection;
+using Spectre.Console;
+using TkScripts.MinFsCompiler;
+using TkScripts.Shared.Models;
 using TotkCommon.Extensions;
 
 string version = typeof(Program).Assembly
@@ -16,62 +11,29 @@ string version = typeof(Program).Assembly
 Console.WriteLine($"""
     TotK Minimized FileSystem Compiler [Version {version}]
     (c) TKMM-Team. MIT.
+    
     """);
 
-const int blockSize = 1000;
-
-List<(ulong Id, string FilePath)> collection = [];
-
-string romfs = args[0];
-foreach (string filePath in Directory.GetFiles(romfs, "*.*", SearchOption.AllDirectories)) {
-    var relativeFilePath = Path.GetRelativePath(romfs, filePath).AsSpan();
-    relativeFilePath.ReplaceInline('\\', '/');
-    
-    var name = filePath.ToCanonical(relativeFilePath);
-    var ext = Path.GetExtension(name);
-    
-    // Include all top-level diffable file extensions0.
-    if (ext is ".genvb" or ".bfarc" or ".sarc" or ".pack" or ".bkres" or ".ta" or ".blarc" or ".byml" or ".bgyml"
-            or ".bntx" or ".bars" || name is "System/RegionLangMask.txt") {
-        collection.Add(
-            (Id: XxHash64.HashToUInt64(relativeFilePath.Cast<char, byte>()), filePath)
-        );
-    }
+if (TkConfig.GetGamePaths() is not { Length: > 2 } gamePaths) {
+    AnsiConsole.MarkupLine("[red bold]Extracted game paths not found. Ensure all versions of TotK are configured as romfs dumps in TKMM.[/]");
+    return;
 }
 
-(ulong Id, string)[] pending = [.. collection.OrderBy(x => x.Id)];
-
-string outputFolder = args[1];
-Directory.CreateDirectory(outputFolder);
-
-string metadata = Path.Combine(outputFolder, "__meta__");
-using var metadataFs = File.Create(metadata);
-
-int blockCount = pending.Length / blockSize;
-
-for (int i = 0; i < blockCount; i++) {
-    int baseIndex = i * blockSize;
-    Collect(pending.AsSpan()[baseIndex..(baseIndex + blockSize)]);
+if (args is not [string outputFolder]) {
+    outputFolder = "bin";
 }
 
-Collect(pending.AsSpan()[(blockCount * blockSize)..]);
-return;
-
-void Collect(Span<(ulong Id, string File)> values)
-{
-    ulong lastId = values[^1].Id;
-    string output = Path.Combine(outputFolder, lastId.ToString());
-
-    using var fs = File.Create(output);
-    foreach (var (id, file) in values) {
-        using var read = File.OpenRead(file);
-        int size = Convert.ToInt32(read.Length);
-
-        metadataFs.Write(id);
-        metadataFs.Write(lastId);
-        metadataFs.Write(fs.Position);
-        metadataFs.Write(size);
-
-        read.CopyTo(fs, size);
-    }
+foreach (var romfsFolderPath in gamePaths) {
+    int versionNumber = romfsFolderPath.GetRomfsVersion();
+    string output = Path.Combine(outputFolder, versionNumber.ToString());
+    
+    AnsiConsole.Status()
+        .Spinner(Spinner.Known.Dots2)
+        .SpinnerStyle(Style.Parse("slateblue1 bold"))
+        .Start($"Compiling {versionNumber} to '{output}'", ctx => {
+            using Compiler compiler = new(romfsFolderPath, output);
+            compiler.Compile(ctx);
+        });
+    
+    AnsiConsole.MarkupLine($"[springgreen1]Compilation of {versionNumber} completed.[/] :check_mark:");
 }

@@ -17,4 +17,8 @@
     <PackageReference Include="TotkCommon" Version="1.3.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\TkScripts.Shared\TkScripts.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

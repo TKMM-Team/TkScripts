@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace TkScripts.LookupTables.Models;
+namespace TkScripts.Shared.Models;
 
 public record TkConfig(string[] GameDumpFolderPaths)
 {

@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkScripts.LookupTables", "T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkScripts.MinFsCompiler", "TkScripts.MinFsCompiler\TkScripts.MinFsCompiler.csproj", "{A02325A2-570F-458C-9167-7017E5769431}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkScripts.Shared", "TkScripts.Shared\TkScripts.Shared.csproj", "{E2F0584E-6EA0-4618-B10D-1F5BC8B8E59D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{A02325A2-570F-458C-9167-7017E5769431}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A02325A2-570F-458C-9167-7017E5769431}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A02325A2-570F-458C-9167-7017E5769431}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2F0584E-6EA0-4618-B10D-1F5BC8B8E59D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2F0584E-6EA0-4618-B10D-1F5BC8B8E59D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2F0584E-6EA0-4618-B10D-1F5BC8B8E59D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2F0584E-6EA0-4618-B10D-1F5BC8B8E59D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
