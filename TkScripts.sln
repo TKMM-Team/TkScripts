@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkScripts.LookupTables", "TkScripts.LookupTables\TkScripts.LookupTables.csproj", "{058E9BE5-1367-47D4-896B-EA9D430CDDCE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TkScripts.MinFsCompiler", "TkScripts.MinFsCompiler\TkScripts.MinFsCompiler.csproj", "{A02325A2-570F-458C-9167-7017E5769431}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{058E9BE5-1367-47D4-896B-EA9D430CDDCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{058E9BE5-1367-47D4-896B-EA9D430CDDCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{058E9BE5-1367-47D4-896B-EA9D430CDDCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A02325A2-570F-458C-9167-7017E5769431}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A02325A2-570F-458C-9167-7017E5769431}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A02325A2-570F-458C-9167-7017E5769431}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A02325A2-570F-458C-9167-7017E5769431}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
