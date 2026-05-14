@@ -2,6 +2,7 @@
 using Kokuban;
 using TkScripts.LookupTables.Components;
 using TkScripts.LookupTables.Generators;
+using TkScripts.LookupTables.Models;
 using TkScripts.Shared.Models;
 
 await ConsoleApp.RunAsync(args, App.Run);
@@ -20,7 +21,7 @@ internal static class App
             return;
         }
 
-        var tasks = new Task[4];
+        var tasks = new Task[5];
 
         OutputStore store = new(output);
 
@@ -28,6 +29,7 @@ internal static class App
         tasks[1] = store.WriteResults(new GameDataIndexGenerator(), gamePaths);
         tasks[2] = store.WriteResults(new ChecksumGenerator(), gamePaths);
         tasks[3] = store.WriteResults(new PackFileLookupGenerator(), gamePaths, compress: true);
+        tasks[4] = store.WriteResults(new MaterialDiffGenerator(), gamePaths);
         
         await Task.WhenAll(tasks);
     }
