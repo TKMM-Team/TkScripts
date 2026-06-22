@@ -2,7 +2,6 @@
 using Kokuban;
 using TkScripts.LookupTables.Components;
 using TkScripts.LookupTables.Generators;
-using TkScripts.LookupTables.Models;
 using TkScripts.Shared.Models;
 
 await ConsoleApp.RunAsync(args, App.Run);
